@@ -1,0 +1,9 @@
+node_modules
+.next
+.next-dev
+.env
+*.tsbuildinfo
+data/*.sqlite*
+data/*.csv
+verification/
+scripts/__pycache__/

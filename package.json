@@ -1,0 +1,33 @@
+{
+  "name": "project-atlas-scenario-lab",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3002",
+    "build": "next build",
+    "start": "next start -p 3002",
+    "typecheck": "tsc --noEmit",
+    "data:import": "python scripts/normalize_enrollment.py",
+    "test": "node scripts/test-scenarios.cjs",
+    "test:data": "python scripts/test_normalization.py"
+  },
+  "dependencies": {
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "lucide-react": "^0.468.0",
+    "mapbox-gl": "^3.14.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@types/mapbox-gl": "^3.4.1",
+    "tailwindcss": "^4.1.0",
+    "@tailwindcss/postcss": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}
