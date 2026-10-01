@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MapPinned } from "lucide-react";
+import { Skeleton } from "@/components/Skeleton";
 import type { RegionSignal } from "@/lib/enrollment-types";
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -32,7 +33,7 @@ function fillExpression(signals: RegionSignal[]): import("mapbox-gl").Expression
   return ["match", ["get", "name"], ...signals.flatMap(region => [region.name, color(signalFor(region.name, signals))]), "#8490a8"] as import("mapbox-gl").Expression;
 }
 
-export default function ScenarioMap({ signals }: { signals: RegionSignal[] }) {
+export default function ScenarioMap({ signals, context }: { signals: RegionSignal[]; context?: { title: string; empty: string; note: string } }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<import("mapbox-gl").Map | null>(null);
   const latestOutcomes = useRef(signals);
@@ -123,7 +124,8 @@ export default function ScenarioMap({ signals }: { signals: RegionSignal[] }) {
 
   return <><div className="map-wrap">{token
     ? <div ref={container} className="map-canvas" aria-label="3D basemap with shaded Philippine planning regions" />
-    : <div className="map-empty"><MapPinned size={38} strokeWidth={1.4} /><h3>Observed regional enrollment</h3><p>The basemap is unavailable. Use the area selector above to explore regional school records.</p></div>}
-    {failed&&<p className="map-failure" role="status">Basemap unavailable. Use the area selector above to explore enrollment records.</p>}
-  </div><div className="map-legend"><span><i className="blue"/>Lower than −1%</span><span><i className="green"/>Within ±1%</span><span><i className="orange"/>Higher than +1%</span><span><i className="gray"/>No comparison / boundary mismatch</span></div><p className="map-data-note">Descriptive changes in supplied records, not capacity or hazard signals. Source-year regions; NIR and PSO are available in the area selector but absent from the 2023 map. Reassigned regions are unshaded.</p></>;
+    : <div className="map-empty"><MapPinned size={38} strokeWidth={1.4} /><h3>{context?.title || "Observed regional enrollment"}</h3><p>{context?.empty || "The basemap is unavailable. Use the area selector above to explore regional school records."}</p></div>}
+    {token&&!ready&&!failed&&<div className="map-loading" role="status"><Skeleton className="map-skeleton"/><span>{context ? "Loading geographic context…" : "Loading regional map…"}</span></div>}
+    {failed&&<p className="map-failure" role="status">{context ? context.empty : "Basemap unavailable. Use the area selector above to explore enrollment records."}</p>}
+  </div>{context?<><div className="map-legend"><span><i className="gray"/>No regional observation selected</span></div><p className="map-data-note">{context.note}</p></>:<><div className="map-legend"><span><i className="blue"/>Lower than −1%</span><span><i className="green"/>Within ±1%</span><span><i className="orange"/>Higher than +1%</span><span><i className="gray"/>No comparison / boundary mismatch</span></div><p className="map-data-note">Descriptive changes in supplied records, not capacity or hazard signals. Source-year regions; NIR and PSO are available in the area selector but absent from the 2023 map. Reassigned regions are unshaded.</p></>}</>;
 }

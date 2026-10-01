@@ -17,18 +17,20 @@ type Group = {
 };
 
 const groups: Group[] = [
-  { id: "demographics", label: "Social", x: 25, y: 25, count: 13, inputs: "Observed enrollment; assumed growth, net progression and access", effect: "Reported enrollment anchors the scenario. The three assumed rate contributions determine annual estimated enrollment. Sex counts describe the source, not disadvantage.", signals: ["Enrollment history", "Estimated enrollment", "Sex breakdown"] },
-  { id: "infrastructure", label: "Economic", x: 27, y: 57, count: 16, inputs: "Requested classrooms, rehabilitation, expansion, annexes; assumed unit and maintenance costs", effect: "Funded units follow explicit budget shares and costs. Gaps require an assumed inventory. Annex affordability alone does not establish feasibility.", signals: ["Funded units", "Conditional room gap", "Estimated spend"] },
-  { id: "workforce", label: "Technological", x: 49, y: 16, count: 11, inputs: "Assumed ICT share and provision cost in added rooms", effect: "ICT provision adds to the assumed cost per new room. No observed connectivity or teacher readiness is connected.", signals: ["Effective unit costs", "Affordable rooms"] },
-  { id: "resilience", label: "Environmental", x: 73, y: 27, count: 12, inputs: "Assumed exposed rooms, retrofit requests and costs", effect: "Affordable upgrades are capped by remaining assumed exposed rooms. No hazard layer, avoided damage or risk reduction is estimated.", signals: ["Funded upgrades", "Remaining assumed exposure", "Estimated spend"] },
-  { id: "resources", label: "Political / Policy", x: 76, y: 59, count: 11, inputs: "Assumed budget, eligibility, funding interval and learners-per-room ratio", effect: "The funding interval and eligible share set the available budget. Planning ratios are editable assumptions, not loaded official DepEd standards. Equity reserves remain unassigned.", signals: ["Eligible budget", "Unspent funds", "Conditional room requirements"] },
-  { id: "regions", label: "Observed areas", x: 21, y: 85, count: 12, inputs: "School-year aggregates, qualified place names and reporting coverage", effect: "School through region selections use normalized DepEd records. Map colors describe enrollment changes, with boundary limitations. No mock pressure offsets or confidence scores are used.", signals: ["Observed enrollment change", "Matched-school change", "Source coverage"] },
-  { id: "outcomes", label: "Computed estimates", x: 64, y: 85, count: 14, inputs: "Observed baseline plus explicit STEEP assumptions", effect: "Repeatable arithmetic produces enrollment, affordable project units, spend and a conditional room gap. No causal effect or actual funding impact is asserted.", signals: ["Scenario timeline", "Formula explanation", "Allocation comparison"] },
+  { id: "demographics", label: "Social", x: 25, y: 25, count: 13, inputs: "Population, poverty, health, nutrition, education, housing and protection indicators", effect: "Social observations describe people and access to services. Definitions, population groups and reference periods remain attached to every value.", signals: ["Population need", "Household welfare", "Service access"] },
+  { id: "infrastructure", label: "Economic", x: 27, y: 57, count: 16, inputs: "Work, income, prices, trade, agriculture, industry, budgets and investment", effect: "Economic indicators provide context for household welfare, productive activity and public resources without implying that one movement caused another.", signals: ["Growth and prices", "Employment", "Public resources"] },
+  { id: "workforce", label: "Technological", x: 49, y: 16, count: 11, inputs: "Connectivity, digital access, ICT infrastructure, adoption and innovation", effect: "Technology measures can be compared across places only when access definitions, coverage and units align.", signals: ["Digital access", "Technology spending", "Adoption"] },
+  { id: "resilience", label: "Environmental", x: 73, y: 27, count: 12, inputs: "Climate, hazards, disasters, natural resources, food security and resilience", effect: "Environmental observations describe exposure or conditions. A project listing alone is not a hazard layer or proof of reduced risk.", signals: ["Exposure context", "Natural resources", "Resilience"] },
+  { id: "resources", label: "Political / Policy", x: 76, y: 59, count: 11, inputs: "Government programs, appropriations, agencies, public projects and implementation", effect: "Budget authority, payment and physical progress remain separate concepts. ATLAS shows each only when the source provides it.", signals: ["Appropriations", "Programs", "Project delivery"] },
+  { id: "regions", label: "Geography & time", x: 21, y: 85, count: 12, inputs: "Countries, regions, local areas, reference periods and historical boundaries", effect: "A shared geography layer connects compatible observations while preserving boundary changes and unmatched source labels.", signals: ["Place profiles", "Historical boundaries", "Source coverage"] },
+  { id: "outcomes", label: "Analysis outputs", x: 64, y: 85, count: 14, inputs: "Observed sources, derived measures and explicit user assumptions", effect: "ATLAS produces trends, maps, rankings, comparisons and validated what-if scenarios while labeling observed, derived and assumed values separately.", signals: ["Comparable trends", "Scenario results", "Quality notes"] },
 ];
 
 const variation = (seed: number) => {
   const value = Math.sin(seed * 127.1) * 43758.5453;
-  return value - Math.floor(value);
+  // Keep the decorative layout byte-for-byte stable across server and browser
+  // math implementations so SVG attributes hydrate without warnings.
+  return Number((value - Math.floor(value)).toFixed(7));
 };
 
 const nodes = groups.flatMap((group, groupIndex) =>
@@ -52,7 +54,7 @@ export default function NetworkGraph() {
     <section className="network-page simple-network coded-network" aria-labelledby="network-heading">
       <section className="simple-intro coded-intro">
         <h1 id="network-heading">Atlas data network</h1>
-        <p>Select a color to distinguish observed enrollment from scenario assumptions.</p>
+        <p>Select a STEEP domain to see how source observations become transparent analytical outputs.</p>
       </section>
 
       <section className="coded-layout" aria-label="Project Atlas data relationships">
@@ -91,8 +93,8 @@ export default function NetworkGraph() {
             <h3>Connected signals</h3>
             <div className="coded-signals">{selected.signals.map((signal) => <span key={signal}>{signal}</span>)}</div>
           </section>
-          <p className="coded-process">Previous year + selected inputs → yearly formulas → next year&apos;s outlook</p>
-          <p className="coded-method">Conceptual diagram; cluster sizes are decorative. Scenarios use deterministic formulas, with no ML prediction. PSA, BetterGov, flood-control and ASEAN records in the source browser remain context only and do not feed the calculations.</p>
+          <p className="coded-process">Source observation + geography + time + unit → compatibility checks → analysis</p>
+          <p className="coded-method">Conceptual diagram; cluster sizes are decorative. PSA, BetterGov and ASEAN records support exploration and comparison. A record enters a Scenario Lab calculation only when a validated template defines its role, unit and limitations.</p>
           <Link className="coded-cta" href="/scenario-lab">Try the Scenario Lab <ChevronRight size={16} aria-hidden="true" /></Link>
         </div>
       </section>

@@ -1,15 +1,22 @@
 "use client";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { ChevronDown, MapPinned } from "lucide-react";
 import ScenarioMap from "./ScenarioMap";
 import TrendCharts, { TrendScorecards, historyPoints, scenarioPoints } from "./TrendCharts";
 import WhyThisHappens from "./WhyThisHappens";
 import PlanningControls from "./PlanningControls";
 import ThemeToggle from "@/components/ThemeToggle";
+import AtlasNav from "@/components/AtlasNav";
+import ScenarioTemplateModal from "@/components/ScenarioTemplateModal";
+import { ScenarioLabSkeleton } from "@/components/Skeleton";
 import { BASE_LEVERS, INTERVENTIONS, SHARES, STRATEGIES, TARGET_YEAR } from "@/lib/scenario-data";
 import { timeline } from "@/lib/scenario-engine";
 import { LEVELS, schoolYear, type AreaOption, type EnrollmentData, type EnrollmentYear, type Scope } from "@/lib/enrollment-types";
 import type { Levers, Outcomes, Strategy } from "@/lib/scenario-types";
+import { useSearchParams } from "next/navigation";
+import { readWorkspace } from "@/lib/atlas-workspace";
+import AnalysisScenarioWorkspace from "./AnalysisScenarioWorkspace";
 const fmt=(n:number|null|undefined)=>n==null?"Unknown":n.toLocaleString("en-PH",{maximumFractionDigits:0});
 const money=(n:number)=>`₱${n.toLocaleString("en-PH",{maximumFractionDigits:2})}M`;
 const percent=(n:number|null)=>n===null?"Unavailable":`${n>0?"+":""}${n.toFixed(2)}%`;
@@ -75,20 +82,22 @@ function LoadedLab({data,scopeControls}:{data:EnrollmentData;scopeControls:React
   </div></>;
 }
 
-export default function ScenarioLab() {
+function EducationScenarioLab() {
   const [scope,setScope]=useState<Scope>({level:"national",key:"[]",sector:"All"});
   const [query,setQuery]=useState("");
   const [options,setOptions]=useState<AreaOption[]>([]);
   const [areaError,setAreaError]=useState("");
+  const [areaLoading,setAreaLoading]=useState(false);
   const [data,setData]=useState<EnrollmentData|null>(null);
   const [error,setError]=useState("");
   const [loading,setLoading]=useState(true);
   const [retry,setRetry]=useState(0);
   const signature=JSON.stringify(scope);
   useEffect(()=>{
-    const controller=new AbortController();setOptions([]);setAreaError("");
+    const controller=new AbortController();setOptions([]);setAreaError("");setAreaLoading(false);
     if(scope.level==="national")return()=>controller.abort();
-    const timer=window.setTimeout(()=>{const params=new URLSearchParams({view:"areas",level:scope.level,sector:scope.sector,q:query});fetch(`/api/enrollment?${params}`,{signal:controller.signal}).then(async r=>{const b=await r.json();if(!r.ok)throw new Error(b.error);return b;}).then(setOptions).catch(e=>{if(!controller.signal.aborted)setAreaError(e.message);});},200);
+    setAreaLoading(true);
+    const timer=window.setTimeout(()=>{const params=new URLSearchParams({view:"areas",level:scope.level,sector:scope.sector,q:query});fetch(`/api/enrollment?${params}`,{signal:controller.signal}).then(async r=>{const b=await r.json();if(!r.ok)throw new Error(b.error);return b;}).then(b=>{setOptions(b);setAreaLoading(false);}).catch(e=>{if(!controller.signal.aborted){setAreaError(e.message);setAreaLoading(false);}});},200);
     return()=>{window.clearTimeout(timer);controller.abort();};
   },[scope.level,scope.sector,query,retry]);
   useEffect(()=>{
@@ -102,13 +111,21 @@ export default function ScenarioLab() {
   const scopeControls=<>
     <label>Aggregate by<select value={scope.level} onChange={e=>{setScope(s=>({...s,level:e.target.value as Scope["level"],key:e.target.value==="national"?"[]":""}));setQuery("");}}>{LEVELS.map(l=><option value={l} key={l}>{l[0].toUpperCase()+l.slice(1)}</option>)}</select></label>
     <label>Sector<select value={scope.sector} onChange={e=>setScope(s=>({...s,sector:e.target.value}))}>{["All","Public","Private","Sucslucs","Pso"].map(s=><option key={s} value={s}>{s==="Sucslucs"?"SUCs / LUCs":s==="Pso"?"Philippine Schools Overseas":s}</option>)}</select></label>
-    {scope.level!=="national"&&<><label>Find area or school<input type="search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Name, parent area or school ID"/></label><label className="area-select">Selected area<select value={scope.key} onChange={e=>setScope(s=>({...s,key:e.target.value}))}><option value="">Choose an area</option>{scope.key&&!options.some(o=>o.key===scope.key)&&<option value={scope.key}>{JSON.parse(scope.key).join(" / ")}</option>}{options.map(o=><option key={o.key} value={o.key}>{o.label}</option>)}</select></label><small>Up to 60 matches. Refine your search for more.</small></>}
+    {scope.level!=="national"&&<><label>Find area or school<input type="search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Name, parent area or school ID"/></label><label className="area-select">Selected area<select value={scope.key} onChange={e=>setScope(s=>({...s,key:e.target.value}))} aria-busy={areaLoading}><option value="">{areaLoading?"Loading areas…":"Choose an area"}</option>{scope.key&&!options.some(o=>o.key===scope.key)&&<option value={scope.key}>{JSON.parse(scope.key).join(" / ")}</option>}{options.map(o=><option key={o.key} value={o.key}>{o.label}</option>)}</select></label><small>{areaLoading?"Finding matching areas…":"Up to 60 matches. Refine your search for more."}</small></>}
     {scope.level==="national"&&<p>{scope.sector==="All"?"All supplied school records, including PSO. Select Public for public-sector planning.":`Supplied school records filtered to ${scope.sector==="Sucslucs"?"SUCs / LUCs":scope.sector==="Pso"?"Philippine Schools Overseas":scope.sector}.`}</p>}
   </>;
   const hasData=!loading&&!error&&!!scope.key&&!!data?.history.length;
-  return <main className="lab-shell"><header className="topbar"><div className="brand"><img className="header-logo" src="/atlas-logo.png" alt="Project Atlas"/></div><div className="topbar-right"><span className="prototype-pill">Deterministic planning</span><span>Scenario Lab</span><ThemeToggle/></div></header>
+  return <main className="lab-shell" aria-busy={loading} data-loading-region><AtlasNav compact/><section className="scenario-context"><div><strong>Education access</strong><span>Current validated scenario template · deterministic planning</span></div><ScenarioTemplateModal /></section>
     {!hasData&&<section className="scope-bar" aria-label="Enrollment area selection">{scopeControls}</section>}
     {areaError&&<p className="data-error">{areaError}</p>}
-    {loading?<p className="data-state" role="status">Loading enrollment records…</p>:error?<div className="data-state" role="alert"><p>{error}</p><button className="button primary" onClick={()=>setRetry(v=>v+1)}>Retry data loading</button></div>:!scope.key?<p className="data-state">Select an area to view enrollment history and scenarios.</p>:!data?.history.length?<p className="data-state">No records for this area and sector. Choose another selection.</p>:<LoadedLab key={signature} data={data} scopeControls={scopeControls}/>}
+    {loading?<ScenarioLabSkeleton/>:error?<div className="data-state" role="alert"><p>{error}</p><button className="button primary" onClick={()=>setRetry(v=>v+1)}>Retry data loading</button></div>:!scope.key?<p className="data-state">Select an area to view enrollment history and scenarios.</p>:!data?.history.length?<p className="data-state">No records for this area and sector. Choose another selection.</p>:<LoadedLab key={signature} data={data} scopeControls={scopeControls}/>}
   </main>;
+}
+
+export default function ScenarioLab() {
+  const searchParams = useSearchParams();
+  const workspace = readWorkspace(new URLSearchParams(searchParams.toString()));
+  if (workspace) return <AnalysisScenarioWorkspace key={`${workspace.indicators.join(",")}|${workspace.geography}|${workspace.period}`} workspace={workspace}/>;
+  if (searchParams.get("template") === "education-access") return <EducationScenarioLab/>;
+  return <AnalysisScenarioWorkspace workspace={{indicators:["population","poverty-incidence","employment-rate"],geography:"Philippines — national",period:"Latest available",chart:"Trend"}}/>;
 }

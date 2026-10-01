@@ -1,2 +1,4 @@
 import ScenarioLab from "@/components/scenario-lab/ScenarioLab";
-export default function ScenarioLabPage(){return <ScenarioLab/>}
+import { Suspense } from "react";
+import { ScenarioLabSkeleton } from "@/components/Skeleton";
+export default function ScenarioLabPage(){return <Suspense fallback={<ScenarioLabSkeleton/>}><ScenarioLab/></Suspense>}

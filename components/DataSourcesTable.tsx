@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SourceTableSkeleton } from "./Skeleton";
 
 type Owner = "psa" | "asean" | "budget" | "flood";
 type Cell = string | number | boolean | null;
@@ -20,8 +21,8 @@ const format = (value: Cell, column: string) => {
   return value;
 };
 
-export default function DataSourcesTable() {
-  const [owner, setOwner] = useState<Owner>("psa");
+export default function DataSourcesTable({ initialOwner = "psa" }: { initialOwner?: Owner }) {
+  const [owner, setOwner] = useState<Owner>(initialOwner);
   const [view, setView] = useState("catalog");
   const [id, setId] = useState("");
   const [path, setPath] = useState("");
@@ -68,14 +69,24 @@ export default function DataSourcesTable() {
   const cursorBased = owner === "budget" && ["programs", "objects"].includes(view);
   const previousDisabled = cursorBased ? cursorHistory.length === 0 : offset === 0;
   const nextDisabled = !data || (cursorBased ? !data.nextCursor : data.nextOffset == null);
-  const previous = () => { if (cursorBased) { const history = [...cursorHistory]; setCursor(history.pop() || ""); setCursorHistory(history); } else setOffset(Math.max(0, offset - 20)); };
-  const next = () => { if (!data) return; if (cursorBased) { setCursorHistory((history) => [...history, cursor]); setCursor(data.nextCursor || ""); } else setOffset(data.nextOffset || 0); };
+  const previous = () => { setData(null); if (cursorBased) { const history = [...cursorHistory]; setCursor(history.pop() || ""); setCursorHistory(history); } else setOffset(Math.max(0, offset - 20)); };
+  const next = () => { if (!data) return; const current=data; setData(null); if (cursorBased) { setCursorHistory((history) => [...history, cursor]); setCursor(current.nextCursor || ""); } else setOffset(current.nextOffset || 0); };
+  const exportPage = () => {
+    if (!data?.rows.length) return;
+    const quote = (value: Cell) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+    const csv = [data.columns.map(quote).join(","), ...data.rows.map(row => data.columns.map(column => quote(row[column])).join(","))].join("\n");
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    link.download = `atlas-${owner}-${view}-page.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
 
-  return <section className="source-data" aria-labelledby="source-data-heading">
+  return <section className="source-data" aria-labelledby="source-data-heading" aria-busy={loading} data-loading-region>
     <div className="source-data-heading"><div><h2 id="source-data-heading">Source data</h2><p>Browse records by data owner. Select a row to inspect a dataset or department.</p></div></div>
     <div className="source-tabs" role="tablist" aria-label="Data owner">{ownerTabs.map((label) => <button key={label} type="button" role="tab" id={`source-tab-${label}`} aria-controls="source-panel" aria-selected={activeTab === label} className={activeTab === label ? "active" : ""} onClick={() => changeOwner(label === "BetterGov" ? "budget" : label.toLowerCase() as Owner)}>{label}</button>)}</div>
     <div id="source-panel" role="tabpanel" aria-labelledby={`source-tab-${activeTab}`} className="source-panel">
-      <p className="source-description">{owners.find((item) => item.id === owner)?.description}. Browse-only context; these records do not feed Scenario Lab calculations. ASEAN supports country / regional benchmarks only; flood-control projects do not measure school hazard exposure.</p>
+      <p className="source-description">{owners.find((item) => item.id === owner)?.description}. These records are available for profiles, comparison and dataset-building. Scenario Lab uses them only when a validated template defines compatible inputs; flood-control projects do not by themselves measure hazard exposure.</p>
       <div className="source-toolbar">
         {(owner === "budget" || owner === "flood") && <div className="source-view-switch"><button type="button" className={owner === "budget" ? "active" : ""} onClick={() => changeOwner("budget")}>National budget</button><button type="button" className={owner === "flood" ? "active" : ""} onClick={() => changeOwner("flood")}>Flood-control projects</button></div>}
         {owner === "psa" && <div className="source-view-switch"><button type="button" className={view === "catalog" || view === "sample" ? "active" : ""} onClick={() => changeView("catalog")}>Statistics</button><button type="button" className={view.startsWith("classification") ? "active" : ""} onClick={() => changeView("classifications")}>Classifications</button></div>}
@@ -87,8 +98,9 @@ export default function DataSourcesTable() {
         {((owner === "psa" && view === "catalog") || (owner === "asean" && view === "catalog") || (owner === "budget" && ["catalog", "nep", "programs", "objects"].includes(view)) || owner === "flood") && <form className="source-search" onSubmit={(event) => { event.preventDefault(); setQuery(draftQuery.trim()); resetPage(); }}><label htmlFor="source-query">Search</label><input id="source-query" value={draftQuery} onChange={(event) => setDraftQuery(event.target.value)} placeholder={owner === "flood" ? "Project or location" : "Search this source"} /><button type="submit">Search</button></form>}
       </div>
       {error && <div className="source-error" role="alert">Could not load this source: {error}. <button type="button" onClick={() => setReloadKey((value) => value + 1)}>Retry</button></div>}
-      <div className="source-meta"><span>{loading ? "Loading records…" : data?.total !== undefined ? `${data.total.toLocaleString("en-PH")} records available` : `${data?.rows.length || 0} record(s)`}</span>{data && <a href={data.sourceUrl} target="_blank" rel="noreferrer">View API source ↗</a>}</div>
-      <div className="source-table-wrap"><table><thead><tr>{(data?.columns || []).map((column) => <th key={column} scope="col">{column.replace(/([A-Z])/g, " $1").replace(/_/g, " ")}</th>)}</tr></thead><tbody>{data?.rows.map((row, index) => <tr key={index}>{data.columns.map((column, cellIndex) => <td key={column}>{cellIndex === 0 && clickable ? <button type="button" className="source-row-link" onClick={() => openRow(row)} title="Open record">{format(row[column], column)}</button> : <span title={String(row[column] ?? "")}>{format(row[column], column)}</span>}</td>)}</tr>)}</tbody></table>{!loading && data?.rows.length === 0 && !error && <div className="source-empty">No records found. Try another search or dataset.</div>}{loading && <div className="source-empty" role="status">Loading source data…</div>}</div>
+      <div className="source-badges"><span>Source observation</span><span>{owner === "psa" ? "PSA mirror" : owner === "asean" ? "ASEAN dataset" : "BetterGov record"}</span><span>Retrieved on demand</span></div>
+      <div className="source-meta"><span>{loading ? "Loading records…" : data?.total !== undefined ? `${data.total.toLocaleString("en-PH")} records available` : `${data?.rows.length || 0} record(s)`}</span><span className="source-meta-actions">{data?.rows.length ? <button type="button" onClick={exportPage}>Export current page (.csv)</button> : null}{data && <a href={data.sourceUrl} target="_blank" rel="noreferrer">View API source ↗</a>}</span></div>
+      <div className="source-table-wrap">{loading?<SourceTableSkeleton/>:<><table><thead><tr>{(data?.columns || []).map((column) => <th key={column} scope="col">{column.replace(/([A-Z])/g, " $1").replace(/_/g, " ")}</th>)}</tr></thead><tbody>{data?.rows.map((row, index) => <tr key={index}>{data.columns.map((column, cellIndex) => <td key={column}>{cellIndex === 0 && clickable ? <button type="button" className="source-row-link" onClick={() => openRow(row)} title="Open record">{format(row[column], column)}</button> : <span title={String(row[column] ?? "")}>{format(row[column], column)}</span>}</td>)}</tr>)}</tbody></table>{data?.rows.length === 0 && !error && <div className="source-empty">No records found. Try another search or dataset.</div>}</>}</div>
       {data?.note && <p className="source-note">{data.note}</p>}
       <div className="source-pagination"><button type="button" disabled={previousDisabled || loading} onClick={previous}>Previous</button><span>Page {cursorBased ? cursorHistory.length + 1 : Math.floor(offset / 20) + 1}</span><button type="button" disabled={nextDisabled || loading} onClick={next}>Next</button></div>
     </div>

@@ -61,6 +61,7 @@ html[data-theme="dark"] .coded-demographics{--node:#80baff}html[data-theme="dark
 .source-search input{width:170px;min-height:35px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--surface,#fff);color:var(--text);font-size:12px}
 .source-meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:11px;margin-bottom:9px}
 .source-meta a{color:var(--secondary);text-decoration:none}
+.source-badges{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.source-badges span{padding:5px 7px;border-radius:6px;background:color-mix(in srgb,var(--secondary) 9%,var(--surface,#fff));color:var(--secondary);font-size:9px;font-weight:700}.source-meta-actions{display:flex;align-items:center;gap:12px}.source-meta-actions button{border:0;background:transparent;color:var(--secondary);font-size:11px;padding:0;text-decoration:underline;text-underline-offset:3px}
 .source-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:9px;background:var(--surface,#fff)}
 .source-table-wrap table{width:100%;border-collapse:collapse;text-align:left;font-size:11px}
 .source-table-wrap th,.source-table-wrap td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
