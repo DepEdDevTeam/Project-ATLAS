@@ -136,6 +136,12 @@ def main() -> int:
         help="Approximate overlapping characters between chunks (default: 350)",
     )
     parser.add_argument(
+        "--max-pages",
+        type=int,
+        default=0,
+        help="Optional maximum PDF page count (0 means unlimited)",
+    )
+    parser.add_argument(
         "--no-recursive",
         action="store_true",
         help="Do not search subfolders when an input is a folder",
@@ -146,6 +152,8 @@ def main() -> int:
         parser.error("--max-chars must be greater than 0")
     if args.overlap < 0 or args.overlap >= args.max_chars:
         parser.error("--overlap must be at least 0 and less than --max-chars")
+    if args.max_pages < 0:
+        parser.error("--max-pages cannot be negative")
 
     pdfs, input_errors = collect_pdfs(args.inputs, recursive=not args.no_recursive)
 
@@ -161,6 +169,10 @@ def main() -> int:
 
     for pdf_path in pdfs:
         try:
+            if args.max_pages:
+                reader = PdfReader(str(pdf_path))
+                if len(reader.pages) > args.max_pages:
+                    raise ValueError(f"PDF has {len(reader.pages)} pages; limit is {args.max_pages}.")
             output_path, page_count, chunk_count = process_pdf(
                 pdf_path,
                 max_chars=args.max_chars,

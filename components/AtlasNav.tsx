@@ -8,7 +8,7 @@ const links = [
   ["/data-explorer", "Data Explorer"],
   ["/place-profile", "Place Profile"],
   ["/compare", "Compare"],
-  ["/scenario-lab", "Scenario Lab"],
+  ["/migration-scenario", "Scenario Lab"],
   ["/agent-framework", "Agent Framework"],
   ["/projects-budgets", "Projects & Budgets"],
   ["/asean-benchmarking", "ASEAN Benchmarking"],
