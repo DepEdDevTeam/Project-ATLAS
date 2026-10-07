@@ -9,6 +9,7 @@ const links = [
   ["/place-profile", "Place Profile"],
   ["/compare", "Compare"],
   ["/scenario-lab", "Scenario Lab"],
+  ["/agent-framework", "Agent Framework"],
   ["/projects-budgets", "Projects & Budgets"],
   ["/asean-benchmarking", "ASEAN Benchmarking"],
 ] as const;

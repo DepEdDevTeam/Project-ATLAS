@@ -5,5 +5,7 @@ node_modules
 *.tsbuildinfo
 data/*.sqlite*
 data/*.csv
+data/research/
+data/migration-runs/
 verification/
 scripts/__pycache__/
