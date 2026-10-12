@@ -1,0 +1,31 @@
+.workspace { --planning-border: #aab9ce; --planning-surface: #fff; --planning-text: #172d4a; color: var(--planning-text); background: #f2f5fa; min-height: 100vh; padding: 0 24px 48px; }
+.workspace header:not(:first-child) { padding: 32px 0 24px; }
+.workspace h1 { font-size: 32px; margin: 12px 0; }
+.workspace h2 { font-size: 22px; margin: 0 0 16px; }
+.workspace h3 { margin: 24px 0 12px; text-transform: capitalize; }
+.workspace p, .workspace li { line-height: 1.6; overflow-wrap: anywhere; }
+.workspace blockquote { margin: 16px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.layout { display: grid; grid-template-columns: minmax(270px, 340px) minmax(0, 1fr); gap: 24px; max-width: 1500px; margin: auto; align-items: start; }
+.panel { background: var(--planning-surface); border: 1px solid var(--planning-border); border-radius: 12px; padding: 24px; margin-bottom: 24px; min-width: 0; }
+.workspace label { display: grid; gap: 8px; margin: 16px 0; font-size: 14px; font-weight: 600; }
+.workspace input, .workspace select, .workspace textarea { font: inherit; color: inherit; background: var(--planning-surface); border: 1px solid var(--planning-border); border-radius: 6px; padding: 10px; width: 100%; min-width: 0; min-height: 44px; }
+.workspace button { min-height: 44px; padding: 10px 16px; background: #1e40af; color: white; border: 1px solid #1e40af; border-radius: 6px; cursor: pointer; font: inherit; }
+.workspace button:hover { background: #15317f; }
+.workspace button:disabled { opacity: .6; cursor: wait; }
+.workspace :focus-visible { outline: 3px solid #d97706; outline-offset: 3px; }
+.workspace summary { cursor: pointer; min-height: 44px; padding: 12px 0; line-height: 1.5; }
+.workspace pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; }
+.workspace a { color: #1e40af; text-decoration: underline; overflow-wrap: anywhere; }
+.workspace fieldset { margin: 16px 0; border: 1px solid var(--planning-border); }
+.metric { border-bottom: 1px solid var(--planning-border); }
+.workspace table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+.workspace figure { margin: 16px 0; overflow-x: auto; }
+.workspace th, .workspace td { padding: 12px; text-align: left; border-bottom: 1px solid var(--planning-border); }
+.workspace svg path[role="button"] { cursor: pointer; }
+.workspace svg path[role="button"]:hover { fill: #91afd6; }
+.notice { background: #fff2d5; color: #573d00; padding: 16px; border-radius: 6px; }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.bar { display: grid; gap: 6px; margin: 16px 0; }
+.bar meter { width: 100%; height: 20px; }
+@media (max-width: 800px) { .layout { grid-template-columns: 1fr; } .workspace { padding: 0 16px 32px; } .panel { padding: 16px; } }
+@media print { .layout { display: block; } .layout > section, .actions, .workspace nav { display: none; } .workspace details { display: block; } }

@@ -7,5 +7,9 @@ data/*.sqlite*
 data/*.csv
 data/research/
 data/migration-runs/
+data/planning-runs/
+data/agent-instructions/
+data/planning-policies/
+data/hazard-snapshots/
 verification/
 scripts/__pycache__/

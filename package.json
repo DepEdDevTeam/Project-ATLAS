@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "data:import": "python scripts/normalize_enrollment.py",
     "test": "node scripts/test-scenarios.cjs",
+    "test:planning": "node scripts/test-planning.cjs",
+    "test:planning-storage": "node scripts/test-planning-storage.cjs",
     "test:data": "python scripts/test_normalization.py"
   },
   "dependencies": {
